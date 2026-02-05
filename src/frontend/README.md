@@ -8,10 +8,11 @@ A **React + TypeScript + Vite** chat interface designed for decoupled AI agent s
 
 - **Configuration-Driven Theming**: Zero-code branding via `config.json` or Settings UI
 - **Perplexity Wizard**: AI-powered extraction of branding, colors, and prompts from any website
-- **Integrator Branding**: Configurable watermark with logo, position, opacity, and link
+- **Multi-Company Branding**: Configurable watermark supporting multiple partner/agency logos
 - **Real-time Streaming**: SSE parsing for live AI responses
 - **Tool Call Visualization**: Shows AI "thinking" states and tool execution
 - **Markdown Rendering**: Full markdown support with code highlighting
+- **Image Thumbnails**: Uploaded images display as thumbnails in message bubbles
 - **File Uploads**: Multimodal support for images and documents
 - **Session Management**: URL-based sessions for shareable conversations
 
@@ -107,14 +108,26 @@ Edit `public/config.json`:
   },
   "branding": {
     "enabled": true,
-    "logoUrl": "/n8n-logo.svg",
+    "companies": [
+      { "id": "1", "name": "n8n", "logoUrl": "/n8n-logo.svg", "linkUrl": "https://n8n.io" },
+      { "id": "2", "name": "Partner", "logoUrl": "/partner-logo.svg" }
+    ],
     "position": "bottom-right",
     "opacity": 0.4,
-    "size": 48,
-    "linkUrl": "https://n8n.io"
+    "size": 48
   }
 }
 ```
+
+## 🔐 Perplexity API Key Configuration
+
+The Perplexity Wizard requires an API key. For security, keys are stored in a separate file:
+
+1. Copy `public/perplexity-api-key.template.json` to `public/perplexity-api-key.json`
+2. Replace the placeholder with your key from [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+3. The `.json` file is gitignored; the `.template.json` is committed for reference
+
+Alternatively, enter the key directly in Settings UI (stored in browser session only).
 
 ## 🪄 Perplexity Wizard
 
@@ -139,8 +152,10 @@ All colors are automatically adjusted for WCAG 2.1 contrast compliance.
 ```
 src/frontend/
 ├── public/
-│   ├── config.json          # Runtime configuration
-│   └── n8n-logo.svg         # Default branding logo
+│   ├── config.json                        # Runtime configuration
+│   ├── perplexity-api-key.json           # API key (gitignored)
+│   ├── perplexity-api-key.template.json  # API key template
+│   └── n8n-logo.svg                       # Default branding logo
 ├── src/
 │   ├── components/
 │   │   ├── ChatContainer.tsx

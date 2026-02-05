@@ -8,8 +8,8 @@ A **decoupled agentic AI chat interface** that separates the presentation layer 
 - **Tool Call Transparency**: Visualize AI "thinking" and tool execution in real-time
 - **Zero-Code Branding**: Configure colors, fonts, and styling via JSON—no code changes required
 - **AI-Powered Theme Extraction**: Perplexity Wizard automatically extracts branding from any website
-- **Integrator Watermarking**: Add your company's logo as a configurable watermark
-- **Multimodal Support**: Handle file uploads (images, PDFs) alongside text messages
+- **Multi-Company Watermarking**: Display multiple partner/agency logos as configurable watermarks
+- **Multimodal Support**: Handle file uploads with image thumbnail previews in messages
 - **Shareable Sessions**: URL-based session management for conversation continuity
 
 ## 🏗️ Architecture
@@ -85,11 +85,21 @@ Click the ⚙️ button to open Settings and configure:
 - **Theme Colors**: Primary, secondary, background, surface colors
 - **Integrator Branding**: Optional watermark with your company logo
 
-### 4. Use Perplexity Wizard (Optional)
-The Perplexity Wizard can automatically extract branding from any website:
-1. Enter your Perplexity API key (get one at [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api))
-2. Enter a website URL
-3. Click "✨ Run Wizard" to extract colors, bot name, intro message, and system prompt
+### 4. Configure Perplexity API Key (Optional)
+The Perplexity Wizard requires an API key to extract branding automatically:
+
+**Option A: Configuration File (Recommended)**
+1. Copy `src/frontend/public/perplexity-api-key.template.json` to `perplexity-api-key.json`
+2. Replace the placeholder with your actual API key from [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+3. The file is gitignored for security
+
+**Option B: Settings UI**
+1. Open Settings → Perplexity Wizard section
+2. Enter your API key directly (stored in browser session only)
+
+### 5. Use Perplexity Wizard
+1. Enter a website URL
+2. Click "✨ Run Wizard" to extract colors, bot name, intro message, and system prompt
 
 ## ⚙️ Configuration
 
@@ -113,11 +123,12 @@ Edit `src/frontend/public/config.json` or use the Settings UI:
   },
   "branding": {
     "enabled": true,
-    "logoUrl": "/n8n-logo.svg",
+    "companies": [
+      { "id": "1", "name": "n8n", "logoUrl": "/n8n-logo.svg", "linkUrl": "https://n8n.io" }
+    ],
     "position": "bottom-right",
     "opacity": 0.4,
-    "size": 48,
-    "linkUrl": "https://n8n.io"
+    "size": 48
   }
 }
 ```
@@ -138,8 +149,9 @@ This architecture addresses key challenges in enterprise AI deployment:
 1. **Separation of Concerns**: AI logic (n8n) iterates independently from UI (React)—no frontend deployments needed for prompt changes
 2. **Transparency**: Users see what the AI is doing, building trust through visibility
 3. **Flexibility**: Brand the interface for any client without code changes
-4. **Scalability**: n8n workflows scale independently from the frontend
-5. **White-Labeling**: Integrator watermarking enables reseller/partner branding
+4. **Visual Attachments**: Uploaded images display as thumbnails in message bubbles
+5. **Scalability**: n8n workflows scale independently from the frontend
+6. **White-Labeling**: Integrator watermarking enables reseller/partner branding
 
 ## 🛠️ Tech Stack
 

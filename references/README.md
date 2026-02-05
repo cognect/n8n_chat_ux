@@ -43,6 +43,12 @@ Website URL → Perplexity API → JSON Parsing → WCAG Validation → Config U
 - 3:1 minimum contrast for large text/UI elements
 - Automatic lightening/darkening for compliance
 
+### Secure API Key Configuration
+- Perplexity API keys stored in separate `perplexity-api-key.json` file
+- Template file (`perplexity-api-key.template.json`) committed for reference
+- Secret file gitignored to prevent accidental commits
+- Fallback to manual entry in Settings UI
+
 ## Usage
 
 Reference these documents when:
