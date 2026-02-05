@@ -4,6 +4,7 @@ import { loadConfig, updateConfig } from './services/configService';
 import { ThemeInjector } from './components/ThemeInjector';
 import { ChatContainer } from './components/ChatContainer';
 import { ThemeSettings } from './components/ThemeSettings';
+import { BrandingWatermark } from './components/BrandingWatermark';
 import './index.css';
 
 function App() {
@@ -52,7 +53,7 @@ function App() {
   }
 
   return (
-    <ThemeInjector theme={config.theme}>
+    <ThemeInjector theme={config.theme} identity={config.identity}>
       <div className="app">
         <button
           className="settings-toggle"
@@ -62,6 +63,7 @@ function App() {
           ⚙️
         </button>
         <ChatContainer config={config} />
+        <BrandingWatermark branding={config.branding} />
         {showSettings && (
           <ThemeSettings
             config={config}

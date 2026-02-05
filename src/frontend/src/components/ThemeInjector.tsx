@@ -1,16 +1,18 @@
 import React, { useEffect } from 'react';
-import type { ConfigTheme } from '../types';
+import type { ConfigTheme, ConfigIdentity } from '../types';
 
 interface ThemeInjectorProps {
     theme: ConfigTheme;
+    identity?: ConfigIdentity;
     children: React.ReactNode;
 }
 
 /**
  * Injects CSS custom properties from theme configuration
+ * Also updates browser title and favicon based on identity
  * Enables zero-code theming by reading values from config.json
  */
-export const ThemeInjector: React.FC<ThemeInjectorProps> = ({ theme, children }) => {
+export const ThemeInjector: React.FC<ThemeInjectorProps> = ({ theme, identity, children }) => {
     useEffect(() => {
         // Apply theme variables to document root for global access
         const root = document.documentElement;
@@ -27,6 +29,27 @@ export const ThemeInjector: React.FC<ThemeInjectorProps> = ({ theme, children })
         root.style.setProperty('--bubble-radius', theme.bubbleRadius);
         root.style.setProperty('--input-background', theme.inputBackground);
     }, [theme]);
+
+    // Update browser title based on bot name
+    useEffect(() => {
+        if (identity?.botName) {
+            document.title = `${identity.botName} - AI Assistant`;
+        }
+    }, [identity?.botName]);
+
+    // Update favicon based on avatar URL
+    useEffect(() => {
+        if (identity?.avatarUrl) {
+            // Find or create favicon link
+            let faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+            if (!faviconLink) {
+                faviconLink = document.createElement('link');
+                faviconLink.rel = 'icon';
+                document.head.appendChild(faviconLink);
+            }
+            faviconLink.href = identity.avatarUrl;
+        }
+    }, [identity?.avatarUrl]);
 
     const dynamicStyles: React.CSSProperties = {
         '--color-primary': theme.primaryColor,

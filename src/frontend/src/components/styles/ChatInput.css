@@ -1,4 +1,6 @@
 .chat-input {
+    flex-shrink: 0;
+    /* Prevents input from shrinking */
     padding: 16px 20px;
     background: rgba(0, 0, 0, 0.2);
     border-top: 1px solid rgba(255, 255, 255, 0.05);

@@ -4,6 +4,7 @@ export interface ConfigIdentity {
   botName: string;
   avatarUrl: string;
   introMessage: string;
+  systemPrompt: string;
 }
 
 export interface ConfigTheme {
@@ -33,11 +34,28 @@ export interface ConfigN8n {
   proxyUrl?: string;
 }
 
+export interface ConfigPerplexity {
+  enabled: boolean;
+  apiKey: string;
+  model: string;
+}
+
+export interface ConfigBranding {
+  enabled: boolean;
+  logoUrl: string;
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  opacity: number; // 0-1
+  size: number; // pixels
+  linkUrl?: string;
+}
+
 export interface AppConfig {
   identity: ConfigIdentity;
   theme: ConfigTheme;
   capabilities: ConfigCapabilities;
   n8n: ConfigN8n;
+  perplexity?: ConfigPerplexity;
+  branding?: ConfigBranding;
 }
 
 // Message types
@@ -78,7 +96,7 @@ export interface ToolCall {
 }
 
 // SSE Event types from n8n
-export type SSEEventType = 
+export type SSEEventType =
   | 'workflow:start'
   | 'workflow:end'
   | 'node:start'

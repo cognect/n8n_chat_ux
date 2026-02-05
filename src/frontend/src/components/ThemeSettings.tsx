@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
-import type { AppConfig, ConfigTheme, ConfigIdentity, ConfigCapabilities, ConfigN8n } from '../types';
+import type { AppConfig, ConfigTheme, ConfigIdentity, ConfigCapabilities, ConfigN8n, ConfigBranding } from '../types';
+import { extractWebsiteTheme } from '../services/perplexityService';
+import type { ExtractedTheme } from '../services/perplexityService';
 import './styles/ThemeSettings.css';
 
 interface ThemeSettingsProps {
@@ -63,6 +65,27 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
     const [localConfig, setLocalConfig] = useState<AppConfig>(config);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Perplexity Wizard state
+    const [wizardApiKey, setWizardApiKey] = useState('');
+    const [wizardUrl, setWizardUrl] = useState('');
+    const [integratorUrl, setIntegratorUrl] = useState('');
+    const [isExtracting, setIsExtracting] = useState(false);
+    const [isExtractingIntegrator, setIsExtractingIntegrator] = useState(false);
+    const [extractionError, setExtractionError] = useState<string | null>(null);
+    const [extractionSuccess, setExtractionSuccess] = useState(false);
+    const [integratorSuccess, setIntegratorSuccess] = useState(false);
+    const [copySuccess, setCopySuccess] = useState(false);
+
+    const handleCopySystemPrompt = async () => {
+        try {
+            await navigator.clipboard.writeText(localConfig.identity.systemPrompt);
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
+
     const updateIdentity = (updates: Partial<ConfigIdentity>) => {
         setLocalConfig(prev => ({
             ...prev,
@@ -89,6 +112,117 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
             ...prev,
             n8n: { ...prev.n8n, ...updates }
         }));
+    };
+
+    const updateBranding = (updates: Partial<ConfigBranding>) => {
+        setLocalConfig(prev => ({
+            ...prev,
+            branding: {
+                enabled: prev.branding?.enabled ?? false,
+                logoUrl: prev.branding?.logoUrl ?? '',
+                position: prev.branding?.position ?? 'bottom-right',
+                opacity: prev.branding?.opacity ?? 0.4,
+                size: prev.branding?.size ?? 48,
+                linkUrl: prev.branding?.linkUrl ?? '',
+                ...updates
+            }
+        }));
+    };
+
+    const applyExtractedTheme = (extracted: ExtractedTheme) => {
+        // Apply theme colors
+        const themeUpdates: Partial<ConfigTheme> = {};
+        if (extracted.primaryColor) themeUpdates.primaryColor = extracted.primaryColor;
+        if (extracted.secondaryColor) themeUpdates.secondaryColor = extracted.secondaryColor;
+        if (extracted.backgroundColor) themeUpdates.backgroundColor = extracted.backgroundColor;
+        if (extracted.surfaceColor) themeUpdates.surfaceColor = extracted.surfaceColor;
+        if (extracted.textColor) themeUpdates.textColor = extracted.textColor;
+        if (extracted.textSecondaryColor) themeUpdates.textSecondaryColor = extracted.textSecondaryColor;
+        if (extracted.fontFamily) themeUpdates.fontFamily = extracted.fontFamily;
+        if (extracted.inputBackground) themeUpdates.inputBackground = extracted.inputBackground;
+
+        if (Object.keys(themeUpdates).length > 0) {
+            updateTheme(themeUpdates);
+        }
+
+        // Apply identity updates
+        const identityUpdates: Partial<ConfigIdentity> = {};
+        if (extracted.logoUrl) identityUpdates.avatarUrl = extracted.logoUrl;
+        if (extracted.botName) identityUpdates.botName = extracted.botName;
+        if (extracted.introMessage) identityUpdates.introMessage = extracted.introMessage;
+        if (extracted.systemPrompt) identityUpdates.systemPrompt = extracted.systemPrompt;
+
+        if (Object.keys(identityUpdates).length > 0) {
+            updateIdentity(identityUpdates);
+        }
+    };
+
+    const handleExtractTheme = async () => {
+        if (!wizardUrl.trim()) {
+            setExtractionError('Please enter a website URL');
+            return;
+        }
+
+        if (!wizardApiKey.trim()) {
+            setExtractionError('Please enter your Perplexity API key');
+            return;
+        }
+
+        setIsExtracting(true);
+        setExtractionError(null);
+        setExtractionSuccess(false);
+
+        const result = await extractWebsiteTheme(
+            wizardUrl,
+            wizardApiKey,
+            'sonar'
+        );
+
+        setIsExtracting(false);
+
+        if (result.success && result.data) {
+            applyExtractedTheme(result.data);
+            setExtractionSuccess(true);
+            // Clear success message after 3 seconds
+            setTimeout(() => setExtractionSuccess(false), 3000);
+        } else {
+            setExtractionError(result.error || 'Failed to extract theme');
+        }
+    };
+
+    const handleExtractIntegrator = async () => {
+        if (!integratorUrl.trim()) {
+            setExtractionError('Please enter an integrator website URL');
+            return;
+        }
+
+        if (!wizardApiKey.trim()) {
+            setExtractionError('Please enter your Perplexity API key first');
+            return;
+        }
+
+        setIsExtractingIntegrator(true);
+        setExtractionError(null);
+
+        try {
+            // Extract favicon URL using Google's service
+            const url = new URL(integratorUrl);
+            const faviconUrl = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
+
+            // Update branding with the integrator info
+            updateBranding({
+                enabled: true,
+                logoUrl: faviconUrl,
+                linkUrl: integratorUrl,
+            });
+
+            setIntegratorSuccess(true);
+            setTimeout(() => setIntegratorSuccess(false), 3000);
+        } catch {
+            setExtractionError('Invalid URL format');
+        }
+
+        setIsExtractingIntegrator(false);
     };
 
     const handleDownload = () => {
@@ -140,6 +274,68 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                 </div>
 
                 <div className="theme-settings-content">
+                    {/* Perplexity Wizard Section */}
+                    <section className="settings-section extraction-section">
+                        <h3>🪄 Perplexity Wizard</h3>
+                        <p className="section-description">
+                            Automatically extract branding, colors, messaging, and system prompt from any website using AI.
+                        </p>
+                        <div className="settings-field">
+                            <label>Perplexity API Key</label>
+                            <input
+                                type="password"
+                                value={wizardApiKey}
+                                onChange={(e) => {
+                                    setWizardApiKey(e.target.value);
+                                    setExtractionError(null);
+                                }}
+                                placeholder="pplx-xxxxxxxxxxxxxxxx"
+                                disabled={isExtracting}
+                            />
+                            <span className="field-hint">
+                                Get your API key from <a href="https://www.perplexity.ai/settings/api" target="_blank" rel="noopener noreferrer">perplexity.ai/settings/api</a>
+                            </span>
+                        </div>
+                        <div className="settings-field">
+                            <label>Website URL</label>
+                            <input
+                                type="url"
+                                value={wizardUrl}
+                                onChange={(e) => {
+                                    setWizardUrl(e.target.value);
+                                    setExtractionError(null);
+                                    setExtractionSuccess(false);
+                                }}
+                                placeholder="https://example.com"
+                                disabled={isExtracting}
+                            />
+                        </div>
+                        <button
+                            className={`btn btn--primary extraction-btn wizard-btn ${isExtracting ? 'btn--loading' : ''}`}
+                            onClick={handleExtractTheme}
+                            disabled={isExtracting || !wizardApiKey.trim() || !wizardUrl.trim()}
+                        >
+                            {isExtracting ? (
+                                <>
+                                    <span className="spinner" />
+                                    Extracting Theme...
+                                </>
+                            ) : (
+                                '✨ Run Wizard'
+                            )}
+                        </button>
+                        {extractionError && (
+                            <div className="extraction-message extraction-error">
+                                ❌ {extractionError}
+                            </div>
+                        )}
+                        {extractionSuccess && (
+                            <div className="extraction-message extraction-success">
+                                ✅ Theme extracted and applied successfully!
+                            </div>
+                        )}
+                    </section>
+
                     {/* Identity Section */}
                     <section className="settings-section">
                         <h3>Identity</h3>
@@ -169,6 +365,29 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                                 placeholder="Hello! How can I help you today?"
                                 rows={3}
                             />
+                        </div>
+                        <div className="settings-field">
+                            <label>
+                                System Prompt
+                                <span className="field-hint">Copy this to your n8n AI Agent system prompt</span>
+                            </label>
+                            <div className="textarea-with-button">
+                                <textarea
+                                    value={localConfig.identity.systemPrompt}
+                                    onChange={(e) => updateIdentity({ systemPrompt: e.target.value })}
+                                    placeholder="You are a helpful AI assistant..."
+                                    rows={5}
+                                    className="system-prompt-textarea"
+                                />
+                                <button
+                                    type="button"
+                                    className={`copy-button ${copySuccess ? 'copy-success' : ''}`}
+                                    onClick={handleCopySystemPrompt}
+                                    title="Copy to clipboard"
+                                >
+                                    {copySuccess ? '✓ Copied!' : '📋 Copy'}
+                                </button>
+                            </div>
                         </div>
                     </section>
 
@@ -299,6 +518,108 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                                     placeholder="http://localhost:3001/proxy"
                                 />
                             </div>
+                        )}
+                    </section>
+
+                    {/* Integrator Branding Section */}
+                    <section className="settings-section">
+                        <h3>🏢 Integrator Branding</h3>
+                        <p className="section-description">
+                            Add your company's branding as a watermark in the chat interface.
+                        </p>
+                        <Toggle
+                            label="Enable Watermark"
+                            checked={localConfig.branding?.enabled ?? false}
+                            onChange={(v) => updateBranding({ enabled: v })}
+                        />
+                        {localConfig.branding?.enabled && (
+                            <>
+                                <div className="settings-field">
+                                    <label>Lookup from Website</label>
+                                    <div className="extraction-input-row">
+                                        <input
+                                            type="url"
+                                            value={integratorUrl}
+                                            onChange={(e) => setIntegratorUrl(e.target.value)}
+                                            placeholder="https://your-company.com"
+                                            className="extraction-url-input"
+                                            disabled={isExtractingIntegrator}
+                                        />
+                                        <button
+                                            className={`btn btn--secondary extraction-btn ${isExtractingIntegrator ? 'btn--loading' : ''}`}
+                                            onClick={handleExtractIntegrator}
+                                            disabled={isExtractingIntegrator || !wizardApiKey.trim() || !integratorUrl.trim()}
+                                            title={!wizardApiKey.trim() ? 'Enter Perplexity API key first' : ''}
+                                        >
+                                            {isExtractingIntegrator ? (
+                                                <><span className="spinner" /> Fetching...</>
+                                            ) : '🔍 Lookup'}
+                                        </button>
+                                    </div>
+                                    {integratorSuccess && (
+                                        <div className="extraction-message extraction-success">
+                                            ✅ Integrator branding applied!
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="settings-field">
+                                    <label>Logo URL</label>
+                                    <input
+                                        type="url"
+                                        value={localConfig.branding?.logoUrl || ''}
+                                        onChange={(e) => updateBranding({ logoUrl: e.target.value })}
+                                        placeholder="https://example.com/logo.png"
+                                    />
+                                    {localConfig.branding?.logoUrl && (
+                                        <div className="branding-preview">
+                                            <img src={localConfig.branding.logoUrl} alt="Preview" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="settings-field">
+                                    <label>Link URL</label>
+                                    <input
+                                        type="url"
+                                        value={localConfig.branding?.linkUrl || ''}
+                                        onChange={(e) => updateBranding({ linkUrl: e.target.value })}
+                                        placeholder="https://your-company.com"
+                                    />
+                                </div>
+                                <div className="settings-field">
+                                    <label>Position</label>
+                                    <select
+                                        value={localConfig.branding?.position || 'bottom-right'}
+                                        onChange={(e) => updateBranding({ position: e.target.value as ConfigBranding['position'] })}
+                                    >
+                                        <option value="top-left">Top Left</option>
+                                        <option value="top-right">Top Right</option>
+                                        <option value="bottom-left">Bottom Left</option>
+                                        <option value="bottom-right">Bottom Right</option>
+                                    </select>
+                                </div>
+                                <div className="settings-field">
+                                    <label>Opacity: {Math.round((localConfig.branding?.opacity ?? 0.4) * 100)}%</label>
+                                    <input
+                                        type="range"
+                                        min="0.1"
+                                        max="1"
+                                        step="0.05"
+                                        value={localConfig.branding?.opacity ?? 0.4}
+                                        onChange={(e) => updateBranding({ opacity: parseFloat(e.target.value) })}
+                                    />
+                                </div>
+                                <div className="settings-field">
+                                    <label>Size: {localConfig.branding?.size ?? 48}px</label>
+                                    <input
+                                        type="range"
+                                        min="24"
+                                        max="96"
+                                        step="4"
+                                        value={localConfig.branding?.size ?? 48}
+                                        onChange={(e) => updateBranding({ size: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                            </>
                         )}
                     </section>
                 </div>

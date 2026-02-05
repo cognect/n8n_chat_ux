@@ -1,12 +1,13 @@
 {
     "identity": {
-        "botName": "Cloie",
-        "avatarUrl": "https://brightspotcdn.byu.edu/dims4/default/48ca56f/2147483647/strip/true/crop/225x225+0+0/resize/1200x1200!/quality/90/?url=https%3A%2F%2Fbrigham-young-brightspot-us-east-2.s3.us-east-2.amazonaws.com%2F93%2F95%2Febdf76c84f3b9f6f3aaafcd2c1bf%2Fdownload-1.png",
-        "introMessage": "Hello, I'm Cloie, your AI assistant. How can I help you today?"
+        "botName": "n8n Assistant",
+        "avatarUrl": "",
+        "introMessage": "Hello! I'm your n8n AI Assistant. How can I help you today?",
+        "systemPrompt": "You are a helpful AI assistant powered by n8n. Be friendly, professional, and concise in your responses. Provide accurate information and helpful guidance. When you don't know something, admit it honestly rather than guessing."
     },
     "theme": {
-        "primaryColor": "#6366f1",
-        "secondaryColor": "#818cf8",
+        "primaryColor": "#ff6d5a",
+        "secondaryColor": "#ff8f7e",
         "backgroundColor": "#0f0f23",
         "surfaceColor": "#1a1a2e",
         "textColor": "#ffffff",
@@ -27,5 +28,13 @@
         "webhookUrl": "http://localhost:5678/webhook/chat",
         "useProxy": false,
         "proxyUrl": ""
+    },
+    "branding": {
+        "enabled": true,
+        "logoUrl": "/n8n-logo.svg",
+        "position": "bottom-right",
+        "opacity": 0.4,
+        "size": 48,
+        "linkUrl": "https://n8n.io"
     }
 }

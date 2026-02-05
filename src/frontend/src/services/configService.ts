@@ -5,6 +5,7 @@ const DEFAULT_CONFIG: AppConfig = {
         botName: 'AI Assistant',
         avatarUrl: '',
         introMessage: 'Hello! How can I help you today?',
+        systemPrompt: 'You are a helpful AI assistant. Be friendly, professional, and concise in your responses.',
     },
     theme: {
         primaryColor: '#6366f1',
@@ -70,6 +71,8 @@ function mergeConfig(defaults: AppConfig, overrides: Partial<AppConfig>): AppCon
         theme: { ...defaults.theme, ...overrides.theme },
         capabilities: { ...defaults.capabilities, ...overrides.capabilities },
         n8n: { ...defaults.n8n, ...overrides.n8n },
+        perplexity: overrides.perplexity,
+        branding: overrides.branding,
     };
 }
 
