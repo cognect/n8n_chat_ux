@@ -7,6 +7,8 @@ A **decoupled agentic AI chat interface** that separates the presentation layer 
 - **Real-time Streaming**: SSE (Server-Sent Events) for live AI response visualization
 - **Tool Call Transparency**: Visualize AI "thinking" and tool execution in real-time
 - **Zero-Code Branding**: Configure colors, fonts, and styling via JSON—no code changes required
+- **AI-Powered Theme Extraction**: Perplexity Wizard automatically extracts branding from any website
+- **Integrator Watermarking**: Add your company's logo as a configurable watermark
 - **Multimodal Support**: Handle file uploads (images, PDFs) alongside text messages
 - **Shareable Sessions**: URL-based session management for conversation continuity
 
@@ -43,8 +45,8 @@ n8n_chat_ux/
 │   ├── frontend/                  # React + TypeScript + Vite application
 │   │   ├── README.md              # Frontend documentation
 │   │   ├── src/
-│   │   │   ├── components/        # UI components (Chat, Messages, Theming)
-│   │   │   ├── services/          # API & stream parsing services
+│   │   │   ├── components/        # UI components (Chat, Messages, Theming, Settings)
+│   │   │   ├── services/          # API, stream parsing, Perplexity integration
 │   │   │   └── types/             # TypeScript type definitions
 │   │   └── public/config.json     # Zero-code branding configuration
 │   └── docker/                    # Container configurations
@@ -76,12 +78,46 @@ npm run dev
 ```
 Access the chat UI at [http://localhost:5173](http://localhost:5173)
 
-### 3. Configure Connection
-Update `src/frontend/public/config.json` with your n8n webhook URL:
+### 3. Configure via Settings UI
+Click the ⚙️ button to open Settings and configure:
+- **n8n Connection**: Set your webhook URL
+- **Identity**: Bot name, avatar, intro message, system prompt
+- **Theme Colors**: Primary, secondary, background, surface colors
+- **Integrator Branding**: Optional watermark with your company logo
+
+### 4. Use Perplexity Wizard (Optional)
+The Perplexity Wizard can automatically extract branding from any website:
+1. Enter your Perplexity API key (get one at [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api))
+2. Enter a website URL
+3. Click "✨ Run Wizard" to extract colors, bot name, intro message, and system prompt
+
+## ⚙️ Configuration
+
+Edit `src/frontend/public/config.json` or use the Settings UI:
+
 ```json
 {
+  "identity": {
+    "botName": "n8n Assistant",
+    "avatarUrl": "",
+    "introMessage": "Hello! How can I help you today?",
+    "systemPrompt": "You are a helpful AI assistant..."
+  },
+  "theme": {
+    "primaryColor": "#ff6d5a",
+    "secondaryColor": "#ff8f7e",
+    "backgroundColor": "#0f0f23"
+  },
   "n8n": {
-    "webhookUrl": "http://localhost:5678/webhook/your-workflow-id"
+    "webhookUrl": "http://localhost:5678/webhook/chat"
+  },
+  "branding": {
+    "enabled": true,
+    "logoUrl": "/n8n-logo.svg",
+    "position": "bottom-right",
+    "opacity": 0.4,
+    "size": 48,
+    "linkUrl": "https://n8n.io"
   }
 }
 ```
@@ -103,6 +139,7 @@ This architecture addresses key challenges in enterprise AI deployment:
 2. **Transparency**: Users see what the AI is doing, building trust through visibility
 3. **Flexibility**: Brand the interface for any client without code changes
 4. **Scalability**: n8n workflows scale independently from the frontend
+5. **White-Labeling**: Integrator watermarking enables reseller/partner branding
 
 ## 🛠️ Tech Stack
 
@@ -110,6 +147,7 @@ This architecture addresses key challenges in enterprise AI deployment:
 |-------|------------|
 | Frontend | React 18, TypeScript, Vite |
 | Styling | CSS Modules, CSS Custom Properties |
+| AI Extraction | Perplexity API (Sonar model) |
 | Backend | n8n (workflow automation) |
 | Communication | SSE (streaming), multipart/form-data (uploads) |
 | Development | Docker Compose, ESLint |
