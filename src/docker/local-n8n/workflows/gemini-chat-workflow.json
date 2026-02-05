@@ -22,7 +22,7 @@
         },
         {
             "parameters": {
-                "jsCode": "// Extract message and sessionId from incoming request\nconst body = $input.first().json.body || $input.first().json;\nconst message = body.message || body.text || '';\nconst sessionId = body.sessionId || 'default-session';\n\nconsole.log('Received message:', message, 'Session:', sessionId);\n\nreturn [{\n  json: {\n    message: message,\n    sessionId: sessionId\n  }\n}];"
+                "jsCode": "// Extract message and sessionId from incoming request\n// Handle both JSON and FormData (multipart) requests\nconst inputItem = $input.first();\nconst body = inputItem.json.body || inputItem.json;\nconst message = body.message || body.text || '';\nconst sessionId = body.sessionId || 'default-session';\n\nconsole.log('Received message:', message, 'Session:', sessionId);\n\n// Check for binary data (file uploads)\nconst binaryData = inputItem.binary;\nconst hasFiles = binaryData && Object.keys(binaryData).length > 0;\n\nconst fileInfo = [];\nif (hasFiles) {\n    for (const [key, value] of Object.entries(binaryData)) {\n        fileInfo.push({\n            fieldName: key,\n            fileName: value.fileName || 'unknown',\n            mimeType: value.mimeType || 'application/octet-stream',\n            fileSize: value.fileSize || 0\n        });\n        console.log('File uploaded:', key, value.fileName, value.mimeType);\n    }\n}\n\n// Return with binary data preserved for downstream nodes\nconst result = {\n    json: {\n        message: message,\n        sessionId: sessionId,\n        hasFiles: hasFiles,\n        fileCount: fileInfo.length,\n        files: fileInfo\n    }\n};\n\n// Preserve binary data for multimodal processing\nif (hasFiles) {\n    result.binary = binaryData;\n}\n\nreturn [result];"
             },
             "id": "422f0749-d7d1-472f-9ddf-33c4693b416a",
             "name": "Prepare Request",
@@ -30,6 +30,19 @@
             "typeVersion": 2,
             "position": [
                 368,
+                -272
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Format multimodal input for AI Agent\n// Converts binary files to base64 and prepares message with image context\nconst inputItem = $input.first();\nconst { message, sessionId, hasFiles, files } = inputItem.json;\nconst binaryData = inputItem.binary;\n\nlet formattedMessage = message;\nconst imageData = [];\n\nif (hasFiles && binaryData) {\n    // Build file context for the message\n    const fileDescriptions = [];\n    \n    for (const [key, value] of Object.entries(binaryData)) {\n        const mimeType = value.mimeType || 'application/octet-stream';\n        const fileName = value.fileName || 'unknown';\n        \n        // For images, extract base64 data\n        if (mimeType.startsWith('image/')) {\n            // Get base64 data from binary\n            const base64Data = value.data;\n            imageData.push({\n                mimeType: mimeType,\n                data: base64Data,\n                fileName: fileName\n            });\n            fileDescriptions.push(`[Image: ${fileName}]`);\n        } else {\n            // For non-image files, just describe them\n            fileDescriptions.push(`[File: ${fileName} (${mimeType})]`);\n        }\n    }\n    \n    // Prepend file context to message\n    if (fileDescriptions.length > 0) {\n        const fileContext = 'The user has attached: ' + fileDescriptions.join(', ') + '\\n\\n';\n        formattedMessage = fileContext + (message || 'Please analyze the attached files.');\n    }\n}\n\n// Output formatted message with image data for multimodal processing\nconst result = {\n    json: {\n        message: formattedMessage,\n        sessionId: sessionId,\n        hasImages: imageData.length > 0,\n        imageCount: imageData.length,\n        images: imageData\n    }\n};\n\n// Preserve binary for models that support direct binary input\nif (binaryData) {\n    result.binary = binaryData;\n}\n\nreturn [result];"
+            },
+            "id": "b8c1d2e3-f4a5-6789-0abc-def123456789",
+            "name": "Format Multimodal Input",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
                 -272
             ]
         },
@@ -91,13 +104,13 @@
                 "promptType": "define",
                 "text": "={{ $json.message }}",
                 "options": {
-                    "systemMessage": "You are a helpful AI assistant. Be concise, friendly, and helpful. Use <thinking>your reasoning here</thinking> tags when working through complex problems - this will be displayed to the user as your thought process."
+                    "systemMessage": "You are a helpful AI assistant. Be concise, friendly, and helpful. Use <thinking>your reasoning here</thinking> tags when working through complex problems - this will be displayed to the user as your thought process.\n\nWhen the user attaches files or images, acknowledge them and provide relevant analysis or assistance based on the file context provided in the message."
                 }
             },
             "type": "@n8n/n8n-nodes-langchain.agent",
             "typeVersion": 3.1,
             "position": [
-                592,
+                704,
                 -272
             ],
             "id": "7b3c0533-f52f-4cde-8205-ff2eca29f005",
@@ -113,7 +126,7 @@
             "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
             "typeVersion": 1,
             "position": [
-                560,
+                672,
                 -64
             ],
             "id": "7478a131-6913-47c7-aabc-b9ba6da9cdc5",
@@ -132,7 +145,7 @@
             "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
             "typeVersion": 1.3,
             "position": [
-                720,
+                832,
                 -48
             ],
             "id": "67817899-6b3a-4132-acff-88ad917eaab1",
@@ -152,22 +165,33 @@
                 ]
             ]
         },
-        "Format SSE Response": {
+        "Prepare Request": {
             "main": [
                 [
                     {
-                        "node": "Respond to Webhook",
+                        "node": "Format Multimodal Input",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "Prepare Request": {
+        "Format Multimodal Input": {
             "main": [
                 [
                     {
                         "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format SSE Response": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
                         "type": "main",
                         "index": 0
                     }
@@ -214,7 +238,7 @@
         "binaryMode": "separate",
         "availableInMCP": false
     },
-    "versionId": "5",
+    "versionId": "6",
     "meta": {
         "templateCredsSetupCompleted": true,
         "instanceId": "local-dev"

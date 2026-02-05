@@ -40,13 +40,20 @@ export interface ConfigPerplexity {
   model: string;
 }
 
+// Individual branded company entry for multi-company branding
+export interface BrandedCompany {
+  id: string;           // Unique ID for React keys
+  name: string;         // Company name for display
+  logoUrl: string;      // Logo URL (from Perplexity wizard or manual entry)
+  linkUrl?: string;     // Optional link when clicked
+}
+
 export interface ConfigBranding {
   enabled: boolean;
-  logoUrl: string;
+  companies: BrandedCompany[];  // Array of branded companies (supports multiple logos)
   position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   opacity: number; // 0-1
   size: number; // pixels
-  linkUrl?: string;
 }
 
 export interface AppConfig {

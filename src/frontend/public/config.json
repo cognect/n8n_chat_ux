@@ -31,10 +31,16 @@
     },
     "branding": {
         "enabled": true,
-        "logoUrl": "/n8n-logo.svg",
+        "companies": [
+            {
+                "id": "default",
+                "name": "n8n",
+                "logoUrl": "/n8n-logo.svg",
+                "linkUrl": "https://n8n.io"
+            }
+        ],
         "position": "bottom-right",
         "opacity": 0.4,
-        "size": 48,
-        "linkUrl": "https://n8n.io"
+        "size": 48
     }
 }

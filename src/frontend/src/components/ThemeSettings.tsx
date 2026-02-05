@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
-import type { AppConfig, ConfigTheme, ConfigIdentity, ConfigCapabilities, ConfigN8n, ConfigBranding } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import type { AppConfig, ConfigTheme, ConfigIdentity, ConfigCapabilities, ConfigN8n, ConfigBranding, BrandedCompany } from '../types';
 import { extractWebsiteTheme } from '../services/perplexityService';
+import { loadPerplexityApiKey } from '../services/configService';
 import type { ExtractedTheme } from '../services/perplexityService';
 import './styles/ThemeSettings.css';
 
@@ -58,6 +59,21 @@ const Toggle: React.FC<ToggleProps> = ({ label, checked, onChange }) => (
 );
 
 /**
+ * Generates a unique ID for company entries
+ */
+const generateId = () => `company-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+/**
+ * Creates a default company entry
+ */
+const createDefaultCompany = (): BrandedCompany => ({
+    id: generateId(),
+    name: '',
+    logoUrl: '',
+    linkUrl: '',
+});
+
+/**
  * Theme Settings Panel
  * Allows users to configure, download, and upload config.json
  */
@@ -67,14 +83,25 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
 
     // Perplexity Wizard state
     const [wizardApiKey, setWizardApiKey] = useState('');
+    const [apiKeyFromConfig, setApiKeyFromConfig] = useState(false);
     const [wizardUrl, setWizardUrl] = useState('');
-    const [integratorUrl, setIntegratorUrl] = useState('');
     const [isExtracting, setIsExtracting] = useState(false);
-    const [isExtractingIntegrator, setIsExtractingIntegrator] = useState(false);
     const [extractionError, setExtractionError] = useState<string | null>(null);
     const [extractionSuccess, setExtractionSuccess] = useState(false);
-    const [integratorSuccess, setIntegratorSuccess] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
+
+    // Track which company is being extracted
+    const [extractingCompanyId, setExtractingCompanyId] = useState<string | null>(null);
+
+    // Load Perplexity API key from config file on mount
+    useEffect(() => {
+        loadPerplexityApiKey().then((apiKey) => {
+            if (apiKey) {
+                setWizardApiKey(apiKey);
+                setApiKeyFromConfig(true);
+            }
+        });
+    }, []);
 
     const handleCopySystemPrompt = async () => {
         try {
@@ -115,18 +142,104 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
     };
 
     const updateBranding = (updates: Partial<ConfigBranding>) => {
-        setLocalConfig(prev => ({
-            ...prev,
-            branding: {
-                enabled: prev.branding?.enabled ?? false,
-                logoUrl: prev.branding?.logoUrl ?? '',
-                position: prev.branding?.position ?? 'bottom-right',
-                opacity: prev.branding?.opacity ?? 0.4,
-                size: prev.branding?.size ?? 48,
-                linkUrl: prev.branding?.linkUrl ?? '',
-                ...updates
-            }
-        }));
+        setLocalConfig(prev => {
+            const currentBranding = prev.branding || {
+                enabled: false,
+                companies: [createDefaultCompany()],
+                position: 'bottom-right' as const,
+                opacity: 0.4,
+                size: 48,
+            };
+            return {
+                ...prev,
+                branding: { ...currentBranding, ...updates }
+            };
+        });
+    };
+
+    /**
+     * Update a specific company in the companies array
+     */
+    const updateCompany = (companyId: string, updates: Partial<BrandedCompany>) => {
+        setLocalConfig(prev => {
+            const companies = prev.branding?.companies || [createDefaultCompany()];
+            const updatedCompanies = companies.map(c =>
+                c.id === companyId ? { ...c, ...updates } : c
+            );
+            return {
+                ...prev,
+                branding: {
+                    ...prev.branding!,
+                    companies: updatedCompanies,
+                }
+            };
+        });
+    };
+
+    /**
+     * Add a new company entry
+     */
+    const addCompany = () => {
+        setLocalConfig(prev => {
+            const companies = prev.branding?.companies || [];
+            return {
+                ...prev,
+                branding: {
+                    ...prev.branding!,
+                    companies: [...companies, createDefaultCompany()],
+                }
+            };
+        });
+    };
+
+    /**
+     * Remove a company entry
+     */
+    const removeCompany = (companyId: string) => {
+        setLocalConfig(prev => {
+            const companies = prev.branding?.companies || [];
+            // Don't remove if it's the last one
+            if (companies.length <= 1) return prev;
+            return {
+                ...prev,
+                branding: {
+                    ...prev.branding!,
+                    companies: companies.filter(c => c.id !== companyId),
+                }
+            };
+        });
+    };
+
+    /**
+     * Extract favicon for a specific company using Google's favicon service
+     */
+    const handleExtractCompanyLogo = async (companyId: string, websiteUrl: string) => {
+        if (!websiteUrl.trim()) {
+            setExtractionError('Please enter a website URL');
+            return;
+        }
+
+        setExtractingCompanyId(companyId);
+        setExtractionError(null);
+
+        try {
+            const url = new URL(websiteUrl);
+            const faviconUrl = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
+
+            // Extract company name from domain
+            const domainParts = url.hostname.replace('www.', '').split('.');
+            const companyName = domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
+
+            updateCompany(companyId, {
+                logoUrl: faviconUrl,
+                linkUrl: websiteUrl,
+                name: companyName,
+            });
+        } catch {
+            setExtractionError('Invalid URL format');
+        }
+
+        setExtractingCompanyId(null);
     };
 
     const applyExtractedTheme = (extracted: ExtractedTheme) => {
@@ -183,46 +296,10 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
         if (result.success && result.data) {
             applyExtractedTheme(result.data);
             setExtractionSuccess(true);
-            // Clear success message after 3 seconds
             setTimeout(() => setExtractionSuccess(false), 3000);
         } else {
             setExtractionError(result.error || 'Failed to extract theme');
         }
-    };
-
-    const handleExtractIntegrator = async () => {
-        if (!integratorUrl.trim()) {
-            setExtractionError('Please enter an integrator website URL');
-            return;
-        }
-
-        if (!wizardApiKey.trim()) {
-            setExtractionError('Please enter your Perplexity API key first');
-            return;
-        }
-
-        setIsExtractingIntegrator(true);
-        setExtractionError(null);
-
-        try {
-            // Extract favicon URL using Google's service
-            const url = new URL(integratorUrl);
-            const faviconUrl = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
-
-            // Update branding with the integrator info
-            updateBranding({
-                enabled: true,
-                logoUrl: faviconUrl,
-                linkUrl: integratorUrl,
-            });
-
-            setIntegratorSuccess(true);
-            setTimeout(() => setIntegratorSuccess(false), 3000);
-        } catch {
-            setExtractionError('Invalid URL format');
-        }
-
-        setIsExtractingIntegrator(false);
     };
 
     const handleDownload = () => {
@@ -263,6 +340,11 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
         onClose();
     };
 
+    // Ensure branding has at least one company entry
+    const companies = localConfig.branding?.companies?.length
+        ? localConfig.branding.companies
+        : [createDefaultCompany()];
+
     return (
         <div className="theme-settings-overlay">
             <div className="theme-settings">
@@ -280,22 +362,31 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                         <p className="section-description">
                             Automatically extract branding, colors, messaging, and system prompt from any website using AI.
                         </p>
-                        <div className="settings-field">
-                            <label>Perplexity API Key</label>
-                            <input
-                                type="password"
-                                value={wizardApiKey}
-                                onChange={(e) => {
-                                    setWizardApiKey(e.target.value);
-                                    setExtractionError(null);
-                                }}
-                                placeholder="pplx-xxxxxxxxxxxxxxxx"
-                                disabled={isExtracting}
-                            />
-                            <span className="field-hint">
-                                Get your API key from <a href="https://www.perplexity.ai/settings/api" target="_blank" rel="noopener noreferrer">perplexity.ai/settings/api</a>
-                            </span>
-                        </div>
+                        {!apiKeyFromConfig && (
+                            <div className="settings-field">
+                                <label>Perplexity API Key</label>
+                                <input
+                                    type="password"
+                                    value={wizardApiKey}
+                                    onChange={(e) => {
+                                        setWizardApiKey(e.target.value);
+                                        setExtractionError(null);
+                                    }}
+                                    placeholder="pplx-xxxxxxxxxxxxxxxx"
+                                    disabled={isExtracting}
+                                />
+                                <span className="field-hint">
+                                    Get your API key from <a href="https://www.perplexity.ai/settings/api" target="_blank" rel="noopener noreferrer">perplexity.ai/settings/api</a>
+                                </span>
+                            </div>
+                        )}
+                        {apiKeyFromConfig && (
+                            <div className="settings-field">
+                                <span className="field-hint" style={{ color: 'var(--success-color)' }}>
+                                    ✓ API key loaded from configuration file
+                                </span>
+                            </div>
+                        )}
                         <div className="settings-field">
                             <label>Website URL</label>
                             <input
@@ -525,7 +616,7 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                     <section className="settings-section">
                         <h3>🏢 Integrator Branding</h3>
                         <p className="section-description">
-                            Add your company's branding as a watermark in the chat interface.
+                            Add company logos as watermarks. You can add multiple companies to display grouped logos.
                         </p>
                         <Toggle
                             label="Enable Watermark"
@@ -534,90 +625,120 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                         />
                         {localConfig.branding?.enabled && (
                             <>
-                                <div className="settings-field">
-                                    <label>Lookup from Website</label>
-                                    <div className="extraction-input-row">
-                                        <input
-                                            type="url"
-                                            value={integratorUrl}
-                                            onChange={(e) => setIntegratorUrl(e.target.value)}
-                                            placeholder="https://your-company.com"
-                                            className="extraction-url-input"
-                                            disabled={isExtractingIntegrator}
-                                        />
-                                        <button
-                                            className={`btn btn--secondary extraction-btn ${isExtractingIntegrator ? 'btn--loading' : ''}`}
-                                            onClick={handleExtractIntegrator}
-                                            disabled={isExtractingIntegrator || !wizardApiKey.trim() || !integratorUrl.trim()}
-                                            title={!wizardApiKey.trim() ? 'Enter Perplexity API key first' : ''}
+                                {/* Company Entries */}
+                                <div className="company-entries">
+                                    {companies.map((company, index) => (
+                                        <div key={company.id} className="company-entry">
+                                            <div className="company-entry-header">
+                                                <span className="company-number">Company {index + 1}</span>
+                                                {companies.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn--ghost btn--small company-remove-btn"
+                                                        onClick={() => removeCompany(company.id)}
+                                                        title="Remove company"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="settings-field">
+                                                <label>Lookup from Website</label>
+                                                <div className="extraction-input-row">
+                                                    <input
+                                                        type="url"
+                                                        value={company.linkUrl || ''}
+                                                        onChange={(e) => updateCompany(company.id, { linkUrl: e.target.value })}
+                                                        placeholder="https://company.com"
+                                                        className="extraction-url-input"
+                                                        disabled={extractingCompanyId === company.id}
+                                                    />
+                                                    <button
+                                                        className={`btn btn--secondary extraction-btn ${extractingCompanyId === company.id ? 'btn--loading' : ''}`}
+                                                        onClick={() => handleExtractCompanyLogo(company.id, company.linkUrl || '')}
+                                                        disabled={extractingCompanyId === company.id || !company.linkUrl?.trim()}
+                                                    >
+                                                        {extractingCompanyId === company.id ? (
+                                                            <><span className="spinner" /> Fetching...</>
+                                                        ) : '🔍 Lookup'}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="settings-field">
+                                                <label>Company Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={company.name}
+                                                    onChange={(e) => updateCompany(company.id, { name: e.target.value })}
+                                                    placeholder="Company Name"
+                                                />
+                                            </div>
+
+                                            <div className="settings-field">
+                                                <label>Logo URL</label>
+                                                <input
+                                                    type="url"
+                                                    value={company.logoUrl}
+                                                    onChange={(e) => updateCompany(company.id, { logoUrl: e.target.value })}
+                                                    placeholder="https://example.com/logo.png"
+                                                />
+                                                {company.logoUrl && (
+                                                    <div className="branding-preview">
+                                                        <img src={company.logoUrl} alt={company.name || 'Preview'} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Add Company Button */}
+                                <button
+                                    type="button"
+                                    className="btn btn--secondary add-company-btn"
+                                    onClick={addCompany}
+                                >
+                                    ➕ Add Another Company
+                                </button>
+
+                                {/* Shared Settings */}
+                                <div className="branding-shared-settings">
+                                    <div className="settings-field">
+                                        <label>Position</label>
+                                        <select
+                                            value={localConfig.branding?.position || 'bottom-right'}
+                                            onChange={(e) => updateBranding({ position: e.target.value as ConfigBranding['position'] })}
                                         >
-                                            {isExtractingIntegrator ? (
-                                                <><span className="spinner" /> Fetching...</>
-                                            ) : '🔍 Lookup'}
-                                        </button>
+                                            <option value="top-left">Top Left</option>
+                                            <option value="top-right">Top Right</option>
+                                            <option value="bottom-left">Bottom Left</option>
+                                            <option value="bottom-right">Bottom Right</option>
+                                        </select>
                                     </div>
-                                    {integratorSuccess && (
-                                        <div className="extraction-message extraction-success">
-                                            ✅ Integrator branding applied!
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="settings-field">
-                                    <label>Logo URL</label>
-                                    <input
-                                        type="url"
-                                        value={localConfig.branding?.logoUrl || ''}
-                                        onChange={(e) => updateBranding({ logoUrl: e.target.value })}
-                                        placeholder="https://example.com/logo.png"
-                                    />
-                                    {localConfig.branding?.logoUrl && (
-                                        <div className="branding-preview">
-                                            <img src={localConfig.branding.logoUrl} alt="Preview" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="settings-field">
-                                    <label>Link URL</label>
-                                    <input
-                                        type="url"
-                                        value={localConfig.branding?.linkUrl || ''}
-                                        onChange={(e) => updateBranding({ linkUrl: e.target.value })}
-                                        placeholder="https://your-company.com"
-                                    />
-                                </div>
-                                <div className="settings-field">
-                                    <label>Position</label>
-                                    <select
-                                        value={localConfig.branding?.position || 'bottom-right'}
-                                        onChange={(e) => updateBranding({ position: e.target.value as ConfigBranding['position'] })}
-                                    >
-                                        <option value="top-left">Top Left</option>
-                                        <option value="top-right">Top Right</option>
-                                        <option value="bottom-left">Bottom Left</option>
-                                        <option value="bottom-right">Bottom Right</option>
-                                    </select>
-                                </div>
-                                <div className="settings-field">
-                                    <label>Opacity: {Math.round((localConfig.branding?.opacity ?? 0.4) * 100)}%</label>
-                                    <input
-                                        type="range"
-                                        min="0.1"
-                                        max="1"
-                                        step="0.05"
-                                        value={localConfig.branding?.opacity ?? 0.4}
-                                        onChange={(e) => updateBranding({ opacity: parseFloat(e.target.value) })}
-                                    />
-                                </div>
-                                <div className="settings-field">
-                                    <label>Size: {localConfig.branding?.size ?? 48}px</label>
-                                    <input
-                                        type="range"
-                                        min="24"
-                                        max="96"
-                                        step="4"
-                                        value={localConfig.branding?.size ?? 48}
-                                        onChange={(e) => updateBranding({ size: parseInt(e.target.value) })}
-                                    />
+                                    <div className="settings-field">
+                                        <label>Opacity: {Math.round((localConfig.branding?.opacity ?? 0.4) * 100)}%</label>
+                                        <input
+                                            type="range"
+                                            min="0.1"
+                                            max="1"
+                                            step="0.05"
+                                            value={localConfig.branding?.opacity ?? 0.4}
+                                            onChange={(e) => updateBranding({ opacity: parseFloat(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div className="settings-field">
+                                        <label>Size: {localConfig.branding?.size ?? 48}px</label>
+                                        <input
+                                            type="range"
+                                            min="24"
+                                            max="96"
+                                            step="4"
+                                            value={localConfig.branding?.size ?? 48}
+                                            onChange={(e) => updateBranding({ size: parseInt(e.target.value) })}
+                                        />
+                                    </div>
                                 </div>
                             </>
                         )}

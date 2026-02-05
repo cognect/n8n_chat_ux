@@ -116,3 +116,29 @@ export function getDefaultConfig(): AppConfig {
     return { ...DEFAULT_CONFIG };
 }
 
+/**
+ * Loads Perplexity API key from separate configuration file
+ * Returns null if the file doesn't exist or contains a placeholder
+ */
+export async function loadPerplexityApiKey(): Promise<string | null> {
+    try {
+        const response = await fetch('/perplexity-api-key.json');
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json();
+        const apiKey = data.apiKey;
+
+        // Check if it's a placeholder value
+        if (!apiKey || apiKey === 'pplx-your-api-key-here' || apiKey.includes('your-api-key')) {
+            return null;
+        }
+
+        return apiKey;
+    } catch {
+        // File doesn't exist or invalid JSON - this is expected
+        return null;
+    }
+}
+

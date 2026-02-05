@@ -1,27 +1,43 @@
 .branding-watermark {
     position: fixed;
     z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     pointer-events: auto;
     transition: opacity 0.3s, transform 0.3s;
 }
 
 .branding-watermark:hover {
     opacity: 1 !important;
-    transform: scale(1.05);
+}
+
+/* Container for multiple logos */
+.branding-logos-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Individual logo wrapper */
+.branding-logo-wrapper,
+.branding-logo-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.branding-logo-wrapper:hover,
+.branding-logo-link:hover {
+    transform: scale(1.08);
+}
+
+.branding-logo-link {
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .branding-watermark-image {
-    width: 100%;
-    height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-/* Ensure link styling is clean */
-a.branding-watermark {
-    text-decoration: none;
-    cursor: pointer;
+    border-radius: 4px;
 }

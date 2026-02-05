@@ -78,6 +78,17 @@
     cursor: not-allowed;
 }
 
+.attach-icon {
+    width: 22px;
+    height: 22px;
+    stroke: var(--color-text-secondary);
+    transition: stroke 0.2s;
+}
+
+.chat-input-attach:hover:not(:disabled) .attach-icon {
+    stroke: var(--color-text);
+}
+
 .chat-input-send {
     background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     color: white;

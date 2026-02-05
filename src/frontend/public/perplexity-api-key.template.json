@@ -1,0 +1,4 @@
+{
+    "apiKey": "pplx-your-api-key-here",
+    "_comment": "Copy this file to perplexity-api-key.json and replace with your actual Perplexity API key. Get your API key from https://www.perplexity.ai/settings/api"
+}
