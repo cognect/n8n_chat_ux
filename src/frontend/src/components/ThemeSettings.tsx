@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { AppConfig, ConfigTheme, ConfigIdentity, ConfigCapabilities, ConfigN8n, ConfigBranding, BrandedCompany } from '../types';
 import { extractWebsiteTheme } from '../services/perplexityService';
-import { loadPerplexityApiKey } from '../services/configService';
+import { loadPerplexityApiKey, loadN8nApiKey, isN8nApiKeyFromFile } from '../services/configService';
 import type { ExtractedTheme } from '../services/perplexityService';
 import './styles/ThemeSettings.css';
 
@@ -93,7 +93,7 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
     // Track which company is being extracted
     const [extractingCompanyId, setExtractingCompanyId] = useState<string | null>(null);
 
-    // Load Perplexity API key from config file on mount
+    // Load API keys from config files on mount
     useEffect(() => {
         loadPerplexityApiKey().then((apiKey) => {
             if (apiKey) {
@@ -101,6 +101,8 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                 setApiKeyFromConfig(true);
             }
         });
+        // Also load n8n API key to update isN8nApiKeyFromFile() state
+        loadN8nApiKey();
     }, []);
 
     const handleCopySystemPrompt = async () => {
@@ -580,6 +582,11 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                             checked={localConfig.capabilities.showToolCalls}
                             onChange={(v) => updateCapabilities({ showToolCalls: v })}
                         />
+                        <Toggle
+                            label="Show Developer Metrics"
+                            checked={localConfig.capabilities.showDeveloperMetrics}
+                            onChange={(v) => updateCapabilities({ showDeveloperMetrics: v })}
+                        />
                     </section>
 
                     {/* n8n Connection Section */}
@@ -610,6 +617,27 @@ export const ThemeSettings: React.FC<ThemeSettingsProps> = ({ config, onSave, on
                                 />
                             </div>
                         )}
+                        <div className="settings-field">
+                            <label>n8n API Key (optional)</label>
+                            {isN8nApiKeyFromFile() ? (
+                                <div className="configured-indicator">
+                                    <span className="checkmark">✓</span>
+                                    <span>Configured via n8n-api-key.json</span>
+                                </div>
+                            ) : (
+                                <>
+                                    <input
+                                        type="password"
+                                        value={localConfig.n8n.apiKey || ''}
+                                        onChange={(e) => updateN8n({ apiKey: e.target.value })}
+                                        placeholder="For execution lookup"
+                                    />
+                                    <span className="field-hint">
+                                        Optional. Used for deeper traceability via n8n REST API.
+                                    </span>
+                                </>
+                            )}
+                        </div>
                     </section>
 
                     {/* Integrator Branding Section */}

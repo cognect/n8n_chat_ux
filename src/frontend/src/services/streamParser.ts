@@ -1,4 +1,4 @@
-import type { SSEEvent, SSEEventType, ToolCallStartEvent, ToolCallEndEvent } from '../types';
+import type { SSEEvent, SSEEventType, ToolCallStartEvent, ToolCallEndEvent, SessionMetrics } from '../types';
 
 /**
  * Callback handlers for SSE stream events
@@ -10,6 +10,8 @@ export interface StreamCallbacks {
     onToolCallEnd?: (data: ToolCallEndEvent) => void;
     onData?: (content: string) => void;
     onError?: (error: Error) => void;
+    onMetrics?: (metrics: { executionId?: string; tokenUsage?: { input?: number; output?: number } }) => void;
+    onMetricsComplete?: (metrics: Partial<SessionMetrics>) => void;
 }
 
 /**
@@ -97,6 +99,12 @@ export class StreamParser {
                         this.callbacks.onData?.(event.data);
                     } else if (event.data && typeof event.data === 'object' && 'content' in event.data) {
                         this.callbacks.onData?.((event.data as { content: string }).content);
+                    }
+                    break;
+                case 'metrics':
+                    // Handle metrics event from n8n workflow
+                    if (event.data && typeof event.data === 'object') {
+                        this.callbacks.onMetrics?.(event.data as { executionId?: string; tokenUsage?: { input?: number; output?: number } });
                     }
                     break;
                 case 'error':

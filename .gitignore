@@ -16,6 +16,9 @@ build/
 # Perplexity API key configuration (contains secrets)
 src/frontend/public/perplexity-api-key.json
 
+# n8n API key configuration (contains secrets)
+src/frontend/public/n8n-api-key.json
+
 # IDE
 .idea/
 .vscode/

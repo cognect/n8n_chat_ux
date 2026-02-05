@@ -458,12 +458,29 @@
    =========================================== */
 
 .field-hint {
-    display: block;
     font-size: 11px;
-    font-weight: 400;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary-color);
+    opacity: 0.7;
     margin-top: 4px;
-    opacity: 0.8;
+    display: block;
+}
+
+/* Configured indicator for API keys loaded from file */
+.configured-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 6px;
+    color: #22c55e;
+    font-size: 13px;
+}
+
+.configured-indicator .checkmark {
+    font-weight: bold;
+    font-size: 16px;
 }
 
 .textarea-with-button {

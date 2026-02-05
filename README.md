@@ -6,6 +6,7 @@ A **decoupled agentic AI chat interface** that separates the presentation layer 
 
 - **Real-time Streaming**: SSE (Server-Sent Events) for live AI response visualization
 - **Tool Call Transparency**: Visualize AI "thinking" and tool execution in real-time
+- **Developer Metrics**: Token usage and latency tracking via n8n REST API
 - **Zero-Code Branding**: Configure colors, fonts, and styling via JSON—no code changes required
 - **AI-Powered Theme Extraction**: Perplexity Wizard automatically extracts branding from any website
 - **Multi-Company Watermarking**: Display multiple partner/agency logos as configurable watermarks
@@ -85,7 +86,16 @@ Click the ⚙️ button to open Settings and configure:
 - **Theme Colors**: Primary, secondary, background, surface colors
 - **Integrator Branding**: Optional watermark with your company logo
 
-### 4. Configure Perplexity API Key (Optional)
+### 4. Configure n8n API Key (Optional, for Token Metrics)
+To enable token usage tracking in the metrics display:
+
+1. Copy `src/frontend/public/n8n-api-key.template.json` to `n8n-api-key.json`
+2. Generate an API key from n8n Settings → API
+3. Replace the placeholder in the JSON file with your key
+
+Once configured, messages display latency and token counts (input/output).
+
+### 5. Configure Perplexity API Key (Optional)
 The Perplexity Wizard requires an API key to extract branding automatically:
 
 **Option A: Configuration File (Recommended)**

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Message } from '../types';
 import { ToolCallIndicator, ThinkingIndicator } from './ToolCallIndicator';
+import { MetricsDisplay } from './MetricsDisplay';
 import './styles/MessageBubble.css';
 
 interface MessageBubbleProps {
@@ -10,6 +11,7 @@ interface MessageBubbleProps {
     botAvatar?: string;
     showToolCalls?: boolean;
     showThinking?: boolean;
+    showDeveloperMetrics?: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     botAvatar,
     showToolCalls = true,
     showThinking = true,
+    showDeveloperMetrics = false,
 }) => {
     const [expandedTools, setExpandedTools] = React.useState<Set<string>>(new Set());
     const [thinkingExpanded, setThinkingExpanded] = React.useState(false);
@@ -149,6 +152,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 </div>
 
                 <span className="message-time">{formatTime(message.timestamp)}</span>
+
+                {/* Developer metrics (latency, tokens, duration) */}
+                {showDeveloperMetrics && message.role === 'assistant' && message.metrics && message.status === 'complete' && (
+                    <MetricsDisplay metrics={message.metrics} />
+                )}
             </div>
         </div>
     );

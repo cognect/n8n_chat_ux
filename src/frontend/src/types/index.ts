@@ -26,12 +26,14 @@ export interface ConfigCapabilities {
   voiceInput: boolean;
   thinkingVisualization: boolean;
   showToolCalls: boolean;
+  showDeveloperMetrics: boolean;  // Show token usage & latency
 }
 
 export interface ConfigN8n {
   webhookUrl: string;
   useProxy: boolean;
   proxyUrl?: string;
+  apiKey?: string;                // n8n REST API key for execution lookup
 }
 
 export interface ConfigPerplexity {
@@ -65,6 +67,18 @@ export interface AppConfig {
   branding?: ConfigBranding;
 }
 
+// Session metrics for traceability
+export interface SessionMetrics {
+  latencyMs: number;              // Request-to-first-token latency
+  totalDurationMs: number;        // Request-to-completion duration
+  tokenUsage?: {
+    input?: number;               // Input/prompt tokens
+    output?: number;              // Output/completion tokens
+    total?: number;               // Combined total
+  };
+  executionId?: string;           // n8n workflow execution ID
+}
+
 // Message types
 export type MessageRole = 'user' | 'assistant' | 'system';
 export type MessageStatus = 'pending' | 'streaming' | 'complete' | 'error';
@@ -78,6 +92,7 @@ export interface Message {
   files?: AttachedFile[];
   toolCalls?: ToolCall[];
   thinkingContent?: string;
+  metrics?: SessionMetrics;       // Request metrics for this message
 }
 
 export interface AttachedFile {
@@ -111,6 +126,7 @@ export type SSEEventType =
   | 'tool-call-start'
   | 'tool-call-end'
   | 'data'
+  | 'metrics'
   | 'error';
 
 export interface SSEEvent {

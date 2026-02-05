@@ -10,6 +10,7 @@ A **React + TypeScript + Vite** chat interface designed for decoupled AI agent s
 - **Perplexity Wizard**: AI-powered extraction of branding, colors, and prompts from any website
 - **Multi-Company Branding**: Configurable watermark supporting multiple partner/agency logos
 - **Real-time Streaming**: SSE parsing for live AI responses
+- **Developer Metrics**: Token usage tracking via n8n REST API (latency, token counts)
 - **Tool Call Visualization**: Shows AI "thinking" states and tool execution
 - **Markdown Rendering**: Full markdown support with code highlighting
 - **Image Thumbnails**: Uploaded images display as thumbnails in message bubbles
@@ -45,6 +46,7 @@ public/config.json → ThemeInjector → CSS Custom Properties → All Component
 | `n8nService.ts` | Handles API communication with n8n webhooks |
 | `streamParser.ts` | Parses SSE events from n8n (tool calls, text deltas) |
 | `perplexityService.ts` | AI-powered theme extraction with WCAG contrast validation |
+| `n8nApiService.ts` | n8n REST API integration for token usage metrics |
 
 ## 🚀 Development
 
@@ -118,6 +120,16 @@ Edit `public/config.json`:
   }
 }
 ```
+
+## 🔐 n8n API Key Configuration (Optional)
+
+To enable token usage tracking, configure an n8n API key:
+
+1. Copy `public/n8n-api-key.template.json` to `public/n8n-api-key.json`
+2. Replace the placeholder with your n8n API key (generate from n8n Settings → API)
+3. The `.json` file is gitignored; the `.template.json` is committed for reference
+
+Once configured, the Settings UI shows "Configured via n8n-api-key.json" and metrics (latency, tokens) appear on messages.
 
 ## 🔐 Perplexity API Key Configuration
 

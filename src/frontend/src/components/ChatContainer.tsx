@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { AppConfig, Message, AttachedFile, ToolCall, ConnectionStatus } from '../types';
 import { n8nService } from '../services/n8nService';
+import { n8nApiService } from '../services/n8nApiService';
 import { StreamParser } from '../services/streamParser';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
@@ -192,6 +193,38 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ config }) => {
                 // Auto-focus input on error too
                 chatInputRef.current?.focus();
             },
+            onMetricsComplete: async (metrics) => {
+                // Store metrics on the message for developer display
+                // Only store if we have the required timing data
+                if (metrics.latencyMs !== undefined && metrics.totalDurationMs !== undefined) {
+                    const baseMetrics = {
+                        latencyMs: metrics.latencyMs,
+                        totalDurationMs: metrics.totalDurationMs,
+                        tokenUsage: metrics.tokenUsage,
+                        executionId: metrics.executionId,
+                    };
+
+                    // Initial update with available metrics
+                    updateMessage(assistantMessageId, { metrics: baseMetrics });
+
+                    // If we have an execution ID and no token usage, try fetching from n8n API
+                    if (metrics.executionId && !metrics.tokenUsage?.input) {
+                        try {
+                            const executionData = await n8nApiService.getExecutionDetails(metrics.executionId);
+                            if (executionData?.tokenUsage) {
+                                updateMessage(assistantMessageId, {
+                                    metrics: {
+                                        ...baseMetrics,
+                                        tokenUsage: executionData.tokenUsage,
+                                    },
+                                });
+                            }
+                        } catch (error) {
+                            console.debug('[ChatContainer] Failed to fetch token usage from n8n API:', error);
+                        }
+                    }
+                }
+            },
         });
     };
 
@@ -222,6 +255,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ config }) => {
                         botAvatar={config.identity.avatarUrl}
                         showToolCalls={config.capabilities.showToolCalls}
                         showThinking={config.capabilities.thinkingVisualization}
+                        showDeveloperMetrics={config.capabilities.showDeveloperMetrics}
                     />
                 ))}
                 <div ref={messagesEndRef} />

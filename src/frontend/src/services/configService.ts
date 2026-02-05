@@ -25,6 +25,7 @@ const DEFAULT_CONFIG: AppConfig = {
         voiceInput: false,
         thinkingVisualization: true,
         showToolCalls: true,
+        showDeveloperMetrics: false,  // Hidden by default
     },
     n8n: {
         webhookUrl: '',
@@ -140,5 +141,58 @@ export async function loadPerplexityApiKey(): Promise<string | null> {
         // File doesn't exist or invalid JSON - this is expected
         return null;
     }
+}
+
+/**
+ * Loads n8n API key from separate configuration file
+ * Returns null if the file doesn't exist or contains a placeholder
+ */
+let n8nApiKeyFromFile: string | null = null;
+let n8nApiKeyLoaded = false;
+
+export async function loadN8nApiKey(): Promise<string | null> {
+    if (n8nApiKeyLoaded) {
+        return n8nApiKeyFromFile;
+    }
+
+    try {
+        const response = await fetch('/n8n-api-key.json');
+
+        if (!response.ok) {
+            n8nApiKeyLoaded = true;
+            return null;
+        }
+
+        const data = await response.json();
+        const apiKey = data.apiKey;
+
+        // Check if it's a placeholder value
+        if (!apiKey || apiKey.includes('your-api-key')) {
+            n8nApiKeyLoaded = true;
+            return null;
+        }
+
+        n8nApiKeyFromFile = apiKey;
+        n8nApiKeyLoaded = true;
+        return apiKey;
+    } catch {
+        // File doesn't exist or invalid JSON - this is expected
+        n8nApiKeyLoaded = true;
+        return null;
+    }
+}
+
+/**
+ * Check if n8n API key is loaded from file (non-async check after initial load)
+ */
+export function isN8nApiKeyFromFile(): boolean {
+    return n8nApiKeyFromFile !== null;
+}
+
+/**
+ * Get the n8n API key loaded from file (if any)
+ */
+export function getN8nApiKeyFromFile(): string | null {
+    return n8nApiKeyFromFile;
 }
 

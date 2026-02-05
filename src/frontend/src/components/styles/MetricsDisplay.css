@@ -1,0 +1,54 @@
+/* MetricsDisplay.css - Subtle metrics display for developer mode */
+
+.metrics-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary-color);
+    opacity: 0.6;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    transition: opacity 0.2s ease;
+}
+
+.metrics-display:hover {
+    opacity: 1;
+}
+
+.metric-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s ease;
+}
+
+.metric-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.metric-latency {
+    color: #22c55e;
+    /* Green for fast */
+}
+
+.metric-tokens {
+    color: #a78bfa;
+    /* Purple for tokens */
+}
+
+.metric-duration {
+    color: #60a5fa;
+    /* Blue for duration */
+}
+
+.metric-execution-id {
+    color: var(--text-secondary-color);
+    font-size: 10px;
+}

@@ -81,7 +81,42 @@ export class N8nService {
         this.abort();
         this.abortController = new AbortController();
 
-        const parser = new StreamParser(callbacks);
+        // Latency tracking
+        const startTime = performance.now();
+        let firstTokenTime: number | null = null;
+        let collectedMetrics: { executionId?: string; tokenUsage?: { input?: number; output?: number } } = {};
+
+        // Wrap callbacks to capture timing and metrics
+        const wrappedCallbacks: StreamCallbacks = {
+            ...callbacks,
+            onData: (content: string) => {
+                if (firstTokenTime === null) {
+                    firstTokenTime = performance.now();
+                }
+                callbacks.onData?.(content);
+            },
+            onMetrics: (metrics) => {
+                collectedMetrics = { ...collectedMetrics, ...metrics };
+                callbacks.onMetrics?.(metrics);
+            },
+            onWorkflowEnd: () => {
+                const endTime = performance.now();
+                // Report final metrics
+                callbacks.onMetricsComplete?.({
+                    latencyMs: firstTokenTime !== null ? firstTokenTime - startTime : endTime - startTime,
+                    totalDurationMs: endTime - startTime,
+                    executionId: collectedMetrics.executionId,
+                    tokenUsage: collectedMetrics.tokenUsage ? {
+                        input: collectedMetrics.tokenUsage.input,
+                        output: collectedMetrics.tokenUsage.output,
+                        total: (collectedMetrics.tokenUsage.input || 0) + (collectedMetrics.tokenUsage.output || 0),
+                    } : undefined,
+                });
+                callbacks.onWorkflowEnd?.();
+            },
+        };
+
+        const parser = new StreamParser(wrappedCallbacks);
 
         try {
             let body: FormData | string;
