@@ -89,3 +89,27 @@ export function getConfig(): AppConfig {
 export function isN8nConfigured(): boolean {
     return !!cachedConfig?.n8n.webhookUrl;
 }
+
+/**
+ * Update the cached configuration
+ * Used by ThemeSettings for live preview and saving
+ */
+export function updateConfig(newConfig: AppConfig): void {
+    cachedConfig = newConfig;
+}
+
+/**
+ * Clear the cached configuration
+ * Allows reloading from config.json
+ */
+export function clearConfigCache(): void {
+    cachedConfig = null;
+}
+
+/**
+ * Get the default configuration
+ */
+export function getDefaultConfig(): AppConfig {
+    return { ...DEFAULT_CONFIG };
+}
+

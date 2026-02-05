@@ -61,9 +61,34 @@ body {
   display: flex;
   flex-direction: column;
   padding: 20px;
+  position: relative;
   background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15), transparent 50%),
     radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.1), transparent 50%),
     var(--color-background);
+}
+
+/* Settings toggle button */
+.settings-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: rotate(45deg);
 }
 
 /* Loading state */
