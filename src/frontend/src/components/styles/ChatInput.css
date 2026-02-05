@@ -1,0 +1,207 @@
+.chat-input {
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.chat-input--dragging {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+/* Row */
+.chat-input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+/* Textarea */
+.chat-input-textarea {
+    flex: 1;
+    padding: 14px 18px;
+    background: var(--input-background);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-size: 15px;
+    line-height: 1.4;
+    resize: none;
+    max-height: 150px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chat-input-textarea::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+}
+
+.chat-input-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.chat-input-textarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Buttons */
+.chat-input-attach,
+.chat-input-send {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-input-attach {
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 20px;
+}
+
+.chat-input-attach:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.chat-input-attach:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.chat-input-send {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    font-size: 18px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.chat-input-send:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.chat-input-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.send-icon {
+    transform: rotate(0deg);
+    transition: transform 0.2s;
+}
+
+.chat-input-send:hover:not(:disabled) .send-icon {
+    transform: rotate(15deg);
+}
+
+/* Hidden file input */
+.chat-input-file-input {
+    display: none;
+}
+
+/* File previews */
+.chat-input-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.chat-input-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.file-thumbnail {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.file-icon-large {
+    font-size: 28px;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 120px;
+}
+
+.chat-input-file .file-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+}
+
+.file-remove {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 50%;
+    color: var(--color-error);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.file-remove:hover {
+    background: rgba(239, 68, 68, 0.4);
+}
+
+/* Drop overlay */
+.chat-input-drop-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(99, 102, 241, 0.2);
+    border: 2px dashed var(--color-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-primary);
+    pointer-events: none;
+}

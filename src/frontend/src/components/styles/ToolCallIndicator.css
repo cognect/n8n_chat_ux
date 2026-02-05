@@ -1,0 +1,166 @@
+.tool-call-indicator {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+}
+
+.tool-call-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.tool-call-header:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tool-call-icon {
+    font-size: 14px;
+}
+
+.tool-call-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.tool-call-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--color-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.tool-call-duration {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+}
+
+.tool-call-expand {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+}
+
+/* Status styles */
+.tool-status--progress .tool-call-icon {
+    color: var(--color-primary);
+}
+
+.tool-status--success .tool-call-icon {
+    color: var(--color-success);
+}
+
+.tool-status--failed .tool-call-icon {
+    color: var(--color-error);
+}
+
+/* Details */
+.tool-call-details {
+    padding: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.tool-call-section {
+    margin-bottom: 12px;
+}
+
+.tool-call-section:last-child {
+    margin-bottom: 0;
+}
+
+.tool-call-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.tool-call-code {
+    margin: 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 11px;
+    color: var(--color-text);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* Thinking indicator */
+.thinking-indicator {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.thinking-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.thinking-header:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.thinking-icon {
+    font-size: 14px;
+}
+
+.thinking-label {
+    flex: 1;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.thinking-expand {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+}
+
+.thinking-content {
+    padding: 12px;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.thinking-content pre {
+    margin: 0;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+}

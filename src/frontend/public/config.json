@@ -1,0 +1,31 @@
+{
+    "identity": {
+        "botName": "Cloie",
+        "avatarUrl": "https://brightspotcdn.byu.edu/dims4/default/48ca56f/2147483647/strip/true/crop/225x225+0+0/resize/1200x1200!/quality/90/?url=https%3A%2F%2Fbrigham-young-brightspot-us-east-2.s3.us-east-2.amazonaws.com%2F93%2F95%2Febdf76c84f3b9f6f3aaafcd2c1bf%2Fdownload-1.png",
+        "introMessage": "Hello, I'm Cloie, your AI assistant. How can I help you today?"
+    },
+    "theme": {
+        "primaryColor": "#6366f1",
+        "secondaryColor": "#818cf8",
+        "backgroundColor": "#0f0f23",
+        "surfaceColor": "#1a1a2e",
+        "textColor": "#ffffff",
+        "textSecondaryColor": "#a1a1aa",
+        "errorColor": "#ef4444",
+        "successColor": "#22c55e",
+        "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        "bubbleRadius": "16px",
+        "inputBackground": "#16162a"
+    },
+    "capabilities": {
+        "fileUpload": true,
+        "voiceInput": false,
+        "thinkingVisualization": true,
+        "showToolCalls": true
+    },
+    "n8n": {
+        "webhookUrl": "http://localhost:5678/webhook/chat",
+        "useProxy": false,
+        "proxyUrl": ""
+    }
+}

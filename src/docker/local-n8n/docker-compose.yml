@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: local-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Basic config
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+
+      # Enable execution mode for webhook persistence
+      - EXECUTIONS_MODE=regular
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+
+      # Security settings for local dev
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_SECURE_COOKIE=false
+
+      # Timezone
+      - GENERIC_TIMEZONE=America/Los_Angeles
+      - TZ=America/Los_Angeles
+
+      # Allow external connections for webhooks
+      - N8N_LISTEN_ADDRESS=0.0.0.0
+    volumes:
+      # Persist n8n data to local filesystem
+      - ./data:/home/node/.n8n
+    networks:
+      - n8n-network
+
+networks:
+  n8n-network:
+    driver: bridge
